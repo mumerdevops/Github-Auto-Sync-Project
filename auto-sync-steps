@@ -1,0 +1,59 @@
+# 🔄 GitHub Repo Auto-Mirror Sync
+
+Yeh project aik automated workflow hai jo mere **Main Project** ko mere **Backup Project** ke saath hamesha synchronized rakhta hai. Agar mein aik repo mein code push karta hoon, to woh doosri repo mein khud-ba-khud update ho jata hai.
+
+## 🚀 Features
+- **Auto-Sync:** Har push par automation chalti hai.
+- **Conflict Solver:** `reset --hard` logic use ki gayi hai taakay merge conflicts ka masla na aaye.
+- **Secure:** GitHub Secrets aur PAT (Personal Access Token) ka istemal kiya gaya hai.
+
+
+
+## 🛠️ Setup Instructions
+
+### 1. Token Setup (PAT)
+Sab se pehlay aap ko aik **Personal Access Token** generate karna hoga:
+- GitHub Settings > Developer Settings > Tokens (Classic).
+- Permissions mein `repo` aur `workflow` ko check karen.
+- Token ko copy kar len.
+
+### 2. Secret Configuration
+- Apni source repository (`main-project`) ki **Settings** mein jayen.
+- **Secrets and variables** > **Actions** par click karen.
+- `New repository secret` banayen:
+  - **Name:** `PAT`
+  - **Value:** (Apna copied token paste karen)
+
+### 3. Workflow File
+Yeh file is path par honi chahiye: `.github/workflows/sync.yml`
+
+```yaml
+name: Sync Repos
+on:
+  push:
+    branches: [main]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+
+      - name: Mirror to Backup
+        run: |
+          git config --global user.email "muhammadumer5689@gmail.com"
+          git config --global user.name "mumerdevops"
+
+          # Clone Destination
+          git clone "https://x-access-token:${{ secrets.PAT }}@[github.com/mumerdevops/backup-project.git](https://github.com/mumerdevops/backup-project.git)" backup-dir
+          cd backup-dir
+
+          # Force Sync Logic
+          git remote add source-repo "https://x-access-token:${{ secrets.PAT }}@[github.com/mumerdevops/main-project.git](https://github.com/mumerdevops/main-project.git)"
+          git fetch source-repo
+          git checkout main
+          git reset --hard source-repo/main
+          git push origin main --force
+        env:
+          PAT: ${{ secrets.PAT }}
